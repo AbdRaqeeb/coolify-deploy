@@ -1,0 +1,12 @@
+# Declare files that will always have CRLF line endings on checkout.
+* text=auto eol=crlf
+
+# Action metadata and docs: LF for Linux runners and consistent tooling.
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Bash scripts must use LF (CRLF breaks `set -o pipefail` on Linux runners).
+.github/scripts/*.sh text eol=lf
+.github/actions/**/*.sh text eol=lf
+scripts/*.sh text eol=lf

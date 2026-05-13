@@ -1,0 +1,106 @@
+name: Deploy via API
+description: >-
+  Update image tag via REST, start deploy, poll to finished (Coolify-compatible deployment API).
+branding:
+  icon: upload-cloud
+  color: blue
+inputs:
+  app-id:
+    description: Application ID in the deploy API (same as appId in the scripts).
+    required: true
+  image-tag:
+    description: Docker image tag to set and deploy (e.g. commit SHA or GHCR tag).
+    required: true
+  base-url:
+    description: Deploy API base URL with no trailing slash (typically vars.DEPLOY_API_BASE_URL).
+    required: true
+  deploy-api-token:
+    description: Bearer token for the deploy API (Authorization header).
+    required: true
+  deploy-use-chmod:
+    description: If true, chmod +x on bundled *.sh before running (recommended when not using bash for every step).
+    default: "true"
+  deploy-use-bash:
+    description: If true, invoke each script with bash script.sh; if false, run ./script.sh (needs +x when chmod is true).
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Make deploy scripts executable
+      if: inputs.deploy-use-chmod == 'true'
+      run: find "${{ github.action_path }}/scripts" -maxdepth 1 -type f -name '*.sh' -exec chmod +x {} +
+      shell: bash
+
+    - name: Get app
+      id: get_app
+      env:
+        TOKEN: ${{ inputs.deploy-api-token }}
+        USE_BASH: ${{ inputs.deploy-use-bash }}
+      run: |
+        if [ "$USE_BASH" = "true" ]; then
+          bash "${{ github.action_path }}/scripts/01-get-app.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --appId '${{ inputs.app-id }}' \
+            --newImageTag '${{ inputs.image-tag }}'
+        else
+          "${{ github.action_path }}/scripts/01-get-app.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --appId '${{ inputs.app-id }}' \
+            --newImageTag '${{ inputs.image-tag }}'
+        fi
+      shell: bash
+
+    - name: Update docker_registry_image_tag
+      id: update_tag
+      if: steps.get_app.outputs.http_code == '200'
+      env:
+        TOKEN: ${{ inputs.deploy-api-token }}
+        USE_BASH: ${{ inputs.deploy-use-bash }}
+      run: |
+        if [ "$USE_BASH" = "true" ]; then
+          bash "${{ github.action_path }}/scripts/02-update-app.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --appId '${{ inputs.app-id }}' \
+            --imageTag '${{ inputs.image-tag }}'
+        else
+          "${{ github.action_path }}/scripts/02-update-app.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --appId '${{ inputs.app-id }}' \
+            --imageTag '${{ inputs.image-tag }}'
+        fi
+      shell: bash
+
+    - name: Deploy image
+      id: deploy_app
+      if: steps.update_tag.outputs.http_code == '200'
+      env:
+        TOKEN: ${{ inputs.deploy-api-token }}
+        USE_BASH: ${{ inputs.deploy-use-bash }}
+      run: |
+        if [ "$USE_BASH" = "true" ]; then
+          bash "${{ github.action_path }}/scripts/03-deploy-app.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --appId '${{ inputs.app-id }}'
+        else
+          "${{ github.action_path }}/scripts/03-deploy-app.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --appId '${{ inputs.app-id }}'
+        fi
+      shell: bash
+
+    - name: Wait for deployment
+      if: steps.update_tag.outputs.http_code == '200'
+      env:
+        TOKEN: ${{ inputs.deploy-api-token }}
+        USE_BASH: ${{ inputs.deploy-use-bash }}
+      run: |
+        if [ "$USE_BASH" = "true" ]; then
+          bash "${{ github.action_path }}/scripts/04-wait-deployment.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --deploymentUuid '${{ steps.deploy_app.outputs.deployment_uuid }}'
+        else
+          "${{ github.action_path }}/scripts/04-wait-deployment.sh" \
+            --baseUrl '${{ inputs.base-url }}' \
+            --deploymentUuid '${{ steps.deploy_app.outputs.deployment_uuid }}'
+        fi
+      shell: bash
