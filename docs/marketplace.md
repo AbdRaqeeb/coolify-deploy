@@ -11,6 +11,8 @@ Follow [GitHub’s official guide](https://docs.github.com/en/actions/sharing-au
 
 ## Metadata checklist
 
+“Metadata” here means the **action definition file** [`action.yml`](../action.yml) (see [metadata syntax](https://docs.github.com/en/actions/sharing-automations/creating-actions/metadata-syntax-for-github-actions)). GitHub uses it for the Marketplace card and for validating the action—not this markdown file.
+
 - [x] `name`, `description`, `runs` defined in `action.yml`
 - [x] `branding.icon` (Feather icon name) and `branding.color` for the listing badge
 - [x] `description` kept short (GitHub recommends about **125 characters** for Marketplace display)
@@ -29,4 +31,4 @@ Use [semantic versioning](https://semver.org/) for tags. Document breaking chang
 
 ## After publishing
 
-Consumers should pin `uses: owner/repo@<tag>` to an immutable or release tag, not `@main`, for stable CI/CD.
+Consumers should pin `uses: AbdRaqeeb/coolify-deploy@<tag>` (or their fork) to an immutable or release tag, not `@main`, for stable CI/CD.

@@ -11,7 +11,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: YOUR_ORG/coolify-deploy@v1
+      - uses: AbdRaqeeb/coolify-deploy@v1
         with:
           app-id: ${{ vars.COOLIFY_APP_ID }}
           image-tag: ${{ github.sha }}
@@ -37,12 +37,10 @@ Pin to a **release tag** (for example `v1` or `v1.0.0`), not a moving branch, in
 | `image-tag` | yes | — | Docker image tag to set and deploy |
 | `base-url` | yes | — | Base URL of the API (no trailing slash) |
 | `deploy-api-token` | yes | — | Bearer token for the API |
-| `deploy-use-chmod` | no | `true` | Run `chmod +x` on bundled shell scripts before use |
-| `deploy-use-bash` | no | `false` | If `true`, run scripts as `bash script.sh` instead of `./script.sh` |
 
 ### Runner requirements
 
-- **bash** and **curl** (standard on `ubuntu-latest`).
+- **bash** and **curl** (standard on `ubuntu-latest`). Scripts are always invoked as `bash /path/to/script.sh`, so execute bits on the files are not required.
 - **jq** is required for patching the app, parsing the deploy response, and polling deployment status (`ubuntu-latest` includes `jq`).
 
 ### Behavior notes

@@ -13,14 +13,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: YOUR_ORG/coolify-deploy@v1
+      - uses: AbdRaqeeb/coolify-deploy@v1
         with:
           app-id: ${{ vars.COOLIFY_APP_ID }}
           image-tag: ${{ github.sha }}
           base-url: ${{ vars.DEPLOY_API_BASE_URL }}
           deploy-api-token: ${{ secrets.DEPLOY_API_TOKEN }}
-          deploy-use-chmod: "true"
-          deploy-use-bash: "false"
 ```
 
 ## Inputs (detailed)
@@ -41,14 +39,7 @@ Scheme + host (+ optional port), **no trailing slash**. Example: `https://app.co
 
 Sent as `Authorization: Bearer <token>`. Store only in **Secrets**, never in variables or logs.
 
-### `deploy-use-chmod` (default `true`)
-
-When `true`, the action runs `chmod +x` on every `*.sh` file in `scripts/` before invoking them. Recommended on runners where execute bits might be missing after checkout.
-
-### `deploy-use-bash` (default `false`)
-
-- `false`: run `"${{ github.action_path }}/scripts/01-get-app.sh" ...` (requires executable bit if `deploy-use-chmod` is `true`).
-- `true`: run `bash /path/to/script.sh ...` (does not rely on execute bit).
+The composite action always runs each step with `bash` and the script path, so file modes do not matter on the runner.
 
 ## Optional: running scripts locally
 
